@@ -25,3 +25,11 @@ print(dilema_prisionero("cooperar","traicionar"))
 
 print("\nJuego Piedra Papel Tijera")
 piedra_papel_tijera()
+
+for x,y in ruta:
+    grid[x][y] = "*"
+
+print("Mapa con el recorrido:")
+
+for fila in grid:
+    print(fila)
