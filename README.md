@@ -12,7 +12,7 @@ Este proyecto presenta la implementación del **Algoritmo A*** (A estrella) util
 
 Además, se incluyen ejemplos de:
 
-- Heurísticas utilizadas en inteligencia artificial
+- Heurísticas utilizando las herramientas 
 - Aplicaciones básicas de la teoría de juegos
 
 El objetivo del proyecto es demostrar cómo los algoritmos de búsqueda informada pueden optimizar procesos de decisión y encontrar soluciones eficientes a problemas complejos.
