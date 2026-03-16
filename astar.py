@@ -1,57 +1,86 @@
 import heapq
 
+# 🔹 Heurística (Manhattan)
 def heuristica(a, b):
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
+# 🔹 Vecinos
+def vecinos(nodo, grid):
+    x, y = nodo
+    posibles = [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]
+    resultado = []
+
+    for nx, ny in posibles:
+        if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]):
+            if grid[nx][ny] != 1:
+                resultado.append((nx, ny))
+    return resultado
+
+# 🔹 A*
 def a_estrella(grid, inicio, objetivo):
+    abiertos = []
+    heapq.heappush(abiertos, (0, inicio))
 
-    filas = len(grid)
-    columnas = len(grid[0])
-
-    movimientos = [(0,1),(1,0),(0,-1),(-1,0)]
-
-    open_list = []
-    heapq.heappush(open_list,(0,inicio))
-
-    costo = {inicio:0}
     camino = {}
+    g = {inicio: 0}
 
-    while open_list:
-
-        _,actual = heapq.heappop(open_list)
+    while abiertos:
+        _, actual = heapq.heappop(abiertos)
 
         if actual == objetivo:
-            break
+            return camino
 
-        for mov in movimientos:
+        for vecino in vecinos(actual, grid):
+            nuevo_g = g[actual] + 1
 
-            vecino = (actual[0]+mov[0], actual[1]+mov[1])
+            if vecino not in g or nuevo_g < g[vecino]:
+                g[vecino] = nuevo_g
+                f = nuevo_g + heuristica(vecino, objetivo)
 
-            if 0 <= vecino[0] < filas and 0 <= vecino[1] < columnas:
+                heapq.heappush(abiertos, (f, vecino))
+                camino[vecino] = actual
 
-                if grid[vecino[0]][vecino[1]] == 1:
-                    continue
+    return camino
 
-                nuevo_costo = costo[actual] + 1
+# 🔹 Dibujar árbol del recorrido
+def dibujar_arbol(camino, inicio, objetivo):
+    print("\n🌳 Árbol de recorrido:\n")
 
-                if vecino not in costo or nuevo_costo < costo[vecino]:
+    for hijo, padre in camino.items():
+        print(f"{padre}  →  {hijo}")
 
-                    costo[vecino] = nuevo_costo
+    print("\n📍 Ruta final:\n")
 
-                    prioridad = nuevo_costo + heuristica(objetivo,vecino)
+    # reconstruir ruta
+    actual = objetivo
+    ruta = [actual]
 
-                    heapq.heappush(open_list,(prioridad,vecino))
+    while actual in camino:
+        actual = camino[actual]
+        ruta.append(actual)
 
-                    camino[vecino] = actual
-
-    ruta = []
-    nodo = objetivo
-
-    while nodo != inicio:
-        ruta.append(nodo)
-        nodo = camino[nodo]
-
-    ruta.append(inicio)
     ruta.reverse()
 
-    return ruta
+    # dibujar tipo árbol
+    for i, nodo in enumerate(ruta):
+        if i == 0:
+            print(f"{nodo} (Inicio)")
+        elif i == len(ruta)-1:
+            print("   " * i + f"└── {nodo} (Meta)")
+        else:
+            print("   " * i + f"└── {nodo}")
+
+# 🔹 GRID
+grid = [
+    [0,0,0],
+    [0,1,0],
+    [0,0,0]
+]
+
+inicio = (0,0)
+objetivo = (2,2)
+
+# 🔹 Ejecutar
+camino = a_estrella(grid, inicio, objetivo)
+
+dibujar_arbol(camino, inicio, objetivo)
