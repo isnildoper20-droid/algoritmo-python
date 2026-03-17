@@ -1,23 +1,78 @@
 import heapq
+import networkx as nx
+import matplotlib.pyplot as plt
+from collections import deque
 
-# 🔹 Heurística (Manhattan)
-def heuristica(a, b):
-    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+#  Grafo manual (no matriz)
+G = {
+    'A': ['B','C'],
+    'B': ['D','E'],
+    'C': ['F'],
+    'D': [],
+    'E': ['F'],
+    'F': []
+}
 
-# 🔹 Vecinos
-def vecinos(nodo, grid):
-    x, y = nodo
-    posibles = [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]
-    resultado = []
+#  Heurística (para A*)
+heuristica = {
+    'A': 5,
+    'B': 4,
+    'C': 2,
+    'D': 6,
+    'E': 1,
+    'F': 0
+}
 
-    for nx, ny in posibles:
-        if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]):
-            if grid[nx][ny] != 1:
-                resultado.append((nx, ny))
-    return resultado
+# ======================
+#  BFS (Anchura)
+# ======================
+def bfs(grafo, inicio, objetivo):
+    cola = deque([[inicio]])
+    visitados = set()
 
-# 🔹 A*
-def a_estrella(grid, inicio, objetivo):
+    while cola:
+        camino = cola.popleft()
+        nodo = camino[-1]
+
+        if nodo == objetivo:
+            return camino
+
+        if nodo not in visitados:
+            visitados.add(nodo)
+
+            for vecino in grafo[nodo]:
+                nuevo_camino = list(camino)
+                nuevo_camino.append(vecino)
+                cola.append(nuevo_camino)
+
+    return None
+
+# ======================
+#  DFS (Profundidad)
+# ======================
+def dfs(grafo, inicio, objetivo, camino=None, visitados=None):
+    if camino is None:
+        camino = [inicio]
+    if visitados is None:
+        visitados = set()
+
+    if inicio == objetivo:
+        return camino
+
+    visitados.add(inicio)
+
+    for vecino in grafo[inicio]:
+        if vecino not in visitados:
+            resultado = dfs(grafo, vecino, objetivo, camino + [vecino], visitados)
+            if resultado:
+                return resultado
+
+    return None
+
+# ======================
+#  A*
+# ======================
+def a_estrella(grafo, inicio, objetivo):
     abiertos = []
     heapq.heappush(abiertos, (0, inicio))
 
@@ -28,59 +83,65 @@ def a_estrella(grid, inicio, objetivo):
         _, actual = heapq.heappop(abiertos)
 
         if actual == objetivo:
-            return camino
+            return reconstruir(camino, actual)
 
-        for vecino in vecinos(actual, grid):
+        for vecino in grafo[actual]:
             nuevo_g = g[actual] + 1
 
             if vecino not in g or nuevo_g < g[vecino]:
                 g[vecino] = nuevo_g
-                f = nuevo_g + heuristica(vecino, objetivo)
+                f = nuevo_g + heuristica[vecino]
 
                 heapq.heappush(abiertos, (f, vecino))
                 camino[vecino] = actual
 
-    return camino
+    return None
 
-# 🔹 Dibujar árbol del recorrido
-def dibujar_arbol(camino, inicio, objetivo):
-    print("\n🌳 Árbol de recorrido:\n")
-
-    for hijo, padre in camino.items():
-        print(f"{padre}  →  {hijo}")
-
-    print("\n📍 Ruta final:\n")
-
-    # reconstruir ruta
-    actual = objetivo
+def reconstruir(camino, actual):
     ruta = [actual]
-
     while actual in camino:
         actual = camino[actual]
         ruta.append(actual)
-
     ruta.reverse()
+    return ruta
 
-    # dibujar tipo árbol
-    for i, nodo in enumerate(ruta):
-        if i == 0:
-            print(f"{nodo} (Inicio)")
-        elif i == len(ruta)-1:
-            print("   " * i + f"└── {nodo} (Meta)")
-        else:
-            print("   " * i + f"└── {nodo}")
+# ======================
+#  Dibujar grafo
+# ======================
+def dibujar_grafo(grafo, ruta, titulo):
+    Gnx = nx.DiGraph()
 
-# 🔹 GRID
-grid = [
-    [0,0,0],
-    [0,1,0],
-    [0,0,0]
-]
+    for nodo in grafo:
+        for vecino in grafo[nodo]:
+            Gnx.add_edge(nodo, vecino)
 
-inicio = (0,0)
-objetivo = (2,2)
+    pos = nx.spring_layout(Gnx)
 
-# 🔹 Ejecutar
-camino = a_estrella(grid, inicio, objetivo)
+    plt.figure()
 
-dibujar_arbol(camino, inicio, objetivo)
+    nx.draw(Gnx, pos, with_labels=True)
+
+    if ruta:
+        edges = [(ruta[i], ruta[i+1]) for i in range(len(ruta)-1)]
+        nx.draw_networkx_edges(Gnx, pos, edgelist=edges, width=3)
+
+    plt.title(titulo)
+    plt.show()
+
+# ======================
+# EJECUCIÓN
+# ======================
+inicio = 'A'
+objetivo = 'F'
+
+ruta_bfs = bfs(G, inicio, objetivo)
+ruta_dfs = dfs(G, inicio, objetivo)
+ruta_astar = a_estrella(G, inicio, objetivo)
+
+print("BFS (Anchura):", ruta_bfs)
+print("DFS (Profundidad):", ruta_dfs)
+print("A*:", ruta_astar)
+
+dibujar_grafo(G, ruta_bfs, "BFS (Anchura)")
+dibujar_grafo(G, ruta_dfs, "DFS (Profundidad)")
+dibujar_grafo(G, ruta_astar, "A* (Heurístico)")
