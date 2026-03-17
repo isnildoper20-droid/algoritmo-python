@@ -37,7 +37,7 @@ def heuristica(nodo, objetivo):
 objetivo = 'F'
 valores_h = {}
 
-print("🔎 CÁLCULO DE HEURÍSTICA:\n")
+print("CÁLCULO DE HEURÍSTICA:\n")
 
 for nodo in coordenadas:
     h = heuristica(nodo, objetivo)
