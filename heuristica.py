@@ -1,67 +1,72 @@
-import math
+import networkx as nx
+import matplotlib.pyplot as plt
 
-# Heurística Manhattan
-def heuristica(a, b):
-    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+# =========================
+#  Coordenadas de nodos
+# =========================
+coordenadas = {
+    'A': (0,0),
+    'B': (1,1),
+    'C': (2,1),
+    'D': (3,2),
+    'F': (4,2)  # objetivo
+}
 
+# =========================
+#  Grafo
+# =========================
+grafo = {
+    'A': ['B','C'],
+    'B': ['C','D'],
+    'C': ['D'],
+    'D': ['F'],
+    'F': []
+}
 
-# Función de búsqueda simple usando heurística
-def busqueda_heuristica(grid, inicio, objetivo):
+# =========================
+#  Función heurística
+# =========================
+def heuristica(nodo, objetivo):
+    x1, y1 = coordenadas[nodo]
+    x2, y2 = coordenadas[objetivo]
+    return abs(x1 - x2) + abs(y1 - y2)
 
-    actual = inicio
-    camino = [actual]
+# =========================
+#  Calcular heurísticas
+# =========================
+objetivo = 'F'
+valores_h = {}
 
-    while actual != objetivo:
+print("🔎 CÁLCULO DE HEURÍSTICA:\n")
 
-        x, y = actual
+for nodo in coordenadas:
+    h = heuristica(nodo, objetivo)
+    valores_h[nodo] = h
 
-        vecinos = [
-            (x+1, y),
-            (x-1, y),
-            (x, y+1),
-            (x, y-1)
-        ]
+    x1, y1 = coordenadas[nodo]
+    x2, y2 = coordenadas[objetivo]
 
-        vecinos_validos = []
+    print(f"{nodo}: |{x1}-{x2}| + |{y1}-{y2}| = {h}")
 
-        for v in vecinos:
+# =========================
+#  Dibujar grafo
+# =========================
+def dibujar_grafo(grafo, heuristica_vals):
+    Gnx = nx.DiGraph()
 
-            if 0 <= v[0] < len(grid) and 0 <= v[1] < len(grid[0]):
+    for nodo in grafo:
+        for vecino in grafo[nodo]:
+            Gnx.add_edge(nodo, vecino)
 
-                if grid[v[0]][v[1]] != 1:
-                    vecinos_validos.append(v)
+    pos = nx.spring_layout(Gnx)
 
-        mejor = min(vecinos_validos, key=lambda v: heuristica(v, objetivo))
+    etiquetas = {}
+    for nodo in grafo:
+        etiquetas[nodo] = f"{nodo}\nh={heuristica_vals[nodo]}"
 
-        camino.append(mejor)
+    plt.figure()
+    nx.draw(Gnx, pos, labels=etiquetas, with_labels=True)
+    plt.title("Grafo con valores heurísticos")
+    plt.show()
 
-        actual = mejor
-
-    return camino
-
-
-# MAPA (0 = libre, 1 = obstáculo)
-grid = [
-[0,0,0,0],
-[0,1,1,0],
-[0,0,0,0],
-[0,1,0,0]
-]
-
-inicio = (0,0)
-objetivo = (3,3)
-
-camino = busqueda_heuristica(grid, inicio, objetivo)
-
-print("Recorrido del camino:")
-for paso in camino:
-    print(paso)
-
-# Mostrar mapa con recorrido
-for x,y in camino:
-    grid[x][y] = "*"
-
-print("\nMapa con el recorrido:")
-
-for fila in grid:
-    print(fila)
+dibujar_grafo(grafo, valores_h)
